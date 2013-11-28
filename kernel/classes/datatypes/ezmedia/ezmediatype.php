@@ -316,9 +316,15 @@ class eZMediaType extends eZDataType
 
         $mediaFilePostVarName = $base . "_data_mediafilename_" . $contentObjectAttribute->attribute( "id" );
         if ( eZHTTPFile::canFetch( $mediaFilePostVarName ) )
+        {
             $mediaFile = eZHTTPFile::fetch( $mediaFilePostVarName );
+        }
         else
-            $mediaFile = null;
+        {
+            $media->remove();
+            return false;
+        }
+
         if ( $mediaFile instanceof eZHTTPFile )
         {
             $mimeData = eZMimeType::findByFileContents( $mediaFile->attribute( "original_filename" ) );
