@@ -83,6 +83,7 @@ class eZUser extends eZPersistentObject
                                                       'account_key' => 'accountKey',
                                                       'groups' => 'groups',
                                                       'has_stored_login' => 'hasStoredLogin',
+                                                      'has_publish_object_same_login' => 'hasPublishedObjectSameLogin',
                                                       'original_password' => 'originalPassword',
                                                       'original_password_confirm' => 'originalPasswordConfirm',
                                                       'roles' => 'roles',
@@ -226,6 +227,34 @@ class eZUser extends eZPersistentObject
         $sql = "SELECT * FROM ezuser WHERE contentobject_id='$contentObjectID' AND LENGTH( login ) > 0";
         $rows = $db->arrayQuery( $sql );
         return !empty( $rows );
+    }
+
+    /**
+     * Checks if another published object has the same login
+     *
+     * @return bool true if a published object with the same login is found, false if none
+     */
+    function hasPublishedObjectSameLogin()
+    {
+        $db = eZDB::instance();
+        $login = $db->escapeString( $this->attribute( 'login' ) );
+
+        $sql = "SELECT contentobject_id FROM ezuser WHERE login='$login' ";
+        $rows = $db->arrayQuery( $sql );
+
+        // If an ezuser with the same login exists
+        if ( !empty( $rows ) )
+        {
+            // Looking if the object related to the ezuser attribute is published:
+            // there is no versioning on ezuser so we don't consider attributes of drafts.
+            $contentObject = eZContentObject::fetch( $this->attribute( 'contentobject_id' ) );
+            if ( $contentObject->attribute( 'status' ) == eZContentObject::STATUS_PUBLISHED )
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /*!
